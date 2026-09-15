@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MuralDoRafa</title>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #0f1117;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #171a23;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #292d3a;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        header h1 {
+            color: #7c5cff;
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #a8adbd;
+            font-size: 14px;
+        }
+
+        .botoes-topo {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 12px 18px;
+            background: #7c5cff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #6547e8;
+            transform: translateY(-2px);
+        }
+
+        button.secundario {
+            background: #292d3a;
+        }
+
+        button.secundario:hover {
+            background: #3a4050;
+        }
+
+        main {
+            width: 100%;
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        .form-container,
+        .search-container {
+            display: none;
+            background: #171a23;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #292d3a;
+        }
+
+        .form-container.ativo,
+        .search-container.ativo {
+            display: block;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            background: #0f1117;
+            color: white;
+            border: 1px solid #343949;
+            border-radius: 10px;
+            padding: 13px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #7c5cff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .preview-container {
+            display: none;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .preview-container.ativo {
+            display: block;
+        }
+
+        .preview-container img {
+            width: 100%;
+            max-height: 350px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #343949;
+        }
+
+        .remover-imagem {
+            margin-top: 8px;
+            background: #e5484d;
+        }
+
+        .remover-imagem:hover {
+            background: #c9363c;
+        }
+
+        .filtro-container {
+            display: none;
+            margin-bottom: 20px;
+            padding: 12px 15px;
+            background: #242837;
+            border-radius: 10px;
+            color: #c7cbe0;
+        }
+
+        .filtro-container.ativo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .postagem {
+            background: #171a23;
+            border: 1px solid #292d3a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .postagem h3 {
+            color: #7c5cff;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .postagem p {
+            color: #e2e5ef;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            margin-bottom: 15px;
+        }
+
+        .imagem-post {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #343949;
+        }
+
+        .data-postagem {
+            color: #8d93a8;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .acoes-postagem {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .acoes-postagem button {
+            background: #292d3a;
+            padding: 9px 13px;
+            font-size: 13px;
+        }
+
+        .acoes-postagem button:hover {
+            background: #3b4254;
+        }
+
+        .comentarios {
+            border-top: 1px solid #292d3a;
+            padding-top: 15px;
+        }
+
+        .comentarios h4 {
+            margin-bottom: 12px;
+            color: #c7cbe0;
+        }
+
+        .comentario {
+            background: #0f1117;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: #dce0ee;
+            font-size: 14px;
+        }
+
+        .campo-comentario {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .campo-comentario input {
+            margin-bottom: 0;
+        }
+
+        .campo-comentario button {
+            white-space: nowrap;
+        }
+
+        .sem-postagens {
+            text-align: center;
+            color: #8d93a8;
+            padding: 30px;
+        }
+
+        .carregando {
+            text-align: center;
+            color: #a8adbd;
+            padding: 25px;
+        }
+
+        .erro {
+            background: #4b2028;
+            color: #ffb8bd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 25px;
+            }
+
+            main {
+                margin-top: 20px;
+            }
+
+            .postagem,
+            .form-container,
+            .search-container {
+                padding: 15px;
+            }
+
+            .campo-comentario {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>📌 MuralDoRafa</h1>
+        <p>Compartilhe ideias, momentos e pensamentos</p>
+
+        <div class="botoes-topo">
+            <button onclick="toggleFormulario()">
+                ➕ Nova postagem
+            </button>
+
+            <button class="secundario" onclick="togglePesquisa()">
+                🔎 Pesquisar
+            </button>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- Formulário de postagem -->
+        <section id="form-container" class="form-container">
+
+            <h2>Nova postagem</h2>
+
+            <br>
+
+            <form id="form-postagem">
+
+                <input
+                    type="text"
+                    id="nome"
+                    placeholder="Seu nome"
+                    maxlength="50"
+                    required
+                >
+
+                <textarea
+                    id="texto"
+                    placeholder="O que você quer compartilhar?"
+                    maxlength="1000"
+                    required
+                ></textarea>
+
+                <label for="imagem">
+                    📷 Escolha uma imagem:
+                </label>
+
+                <br><br>
+
+                <input
+                    type="file"
+                    id="imagem"
+                    accept="image/*"
+                >
+
+                <!-- Preview da imagem -->
+                <div id="preview-container" class="preview-container">
+                    <img id="preview-imagem" alt="Pré-visualização da imagem">
+
+                    <button
+                        type="button"
+                        class="remover-imagem"
+                        onclick="removerImagem()"
+                    >
+                        🗑️ Remover imagem
+                    </button>
+                </div>
+
+                <button type="submit">
+                    Publicar postagem
+                </button>
+
+                <button
+                    type="button"
+                    class="secundario"
+                    onclick="toggleFormulario()"
+                >
+                    Cancelar
+                </button>
+
+            </form>
+        </section>
+
+        <!-- Área de pesquisa -->
+        <section id="search-container" class="search-container">
+
+            <h2>Pesquisar postagens</h2>
+
+            <br>
+
+            <input
+                type="text"
+                id="campo-pesquisa"
+                placeholder="Digite uma hashtag ou palavra..."
+            >
+
+            <button onclick="executarPesquisa()">
+                Pesquisar
+            </button>
+
+            <button
+                class="secundario"
+                onclick="limparFiltro()"
+            >
+                Limpar
+            </button>
+
+        </section>
+
+        <!-- Filtro ativo -->
+        <div id="filtro-container" class="filtro-container">
+            <span id="texto-filtro"></span>
+
+            <button
+                class="secundario"
+                onclick="limparFiltro()"
+            >
+                ✖
+            </button>
+        </div>
+
+        <!-- Feed -->
+        <section id="feed">
+            <div class="carregando">
+                Carregando postagens...
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // CONFIGURAÇÃO DO SUPABASE
+        // ==========================================
+
+        const SUPABASE_URL = "https://ubxocyewlbqzqbfslrvt.supabase.co";
+
+        const SUPABASE_KEY =
+            "sb_publishable_zbWweSWeD5iO1Ubz7YepKQ_Iwm_3g18";
+
+        const supabaseClient = supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+        );
+
+        // Nome do bucket de imagens no Supabase Storage
+        const NOME_BUCKET = "postagens-imagens";
+
+        // Variável para controlar a pesquisa
+        let filtroAtual = "";
+
+        // Elementos HTML
+        const feed = document.getElementById("feed");
+        const formulario = document.getElementById("form-container");
+        const pesquisa = document.getElementById("search-container");
+        const filtroContainer = document.getElementById("filtro-container");
+        const textoFiltro = document.getElementById("texto-filtro");
+
+        const inputImagem = document.getElementById("imagem");
+        const previewContainer = document.getElementById("preview-container");
+        const previewImagem = document.getElementById("preview-imagem");
+
+        let arquivoSelecionado = null;
+
+
+        // ==========================================
+        // ABRIR E FECHAR FORMULÁRIO
+        // ==========================================
+
+        function toggleFormulario() {
+            formulario.classList.toggle("ativo");
+        }
+
+
+        // ==========================================
+        // ABRIR E FECHAR PESQUISA
+        // ==========================================
+
+        function togglePesquisa() {
+            pesquisa.classList.toggle("ativo");
+        }
+
+
+        // ==========================================
+        // PREVISUALIZAÇÃO DA IMAGEM
+        // ==========================================
+
+        inputImagem.addEventListener("change", function (event) {
+
+            const arquivo = event.target.files[0];
+
+            if (!arquivo) {
+                removerImagem();
+                return;
+            }
+
+            if (!arquivo.type.startsWith("image/")) {
+                alert("Escolha um arquivo de imagem válido.");
+                removerImagem();
+                return;
+            }
+
+            if (arquivo.size > 5 * 1024 * 1024) {
+                alert("A imagem deve ter no máximo 5 MB.");
+                removerImagem();
+                return;
+            }
+
+            arquivoSelecionado = arquivo;
+
+            const leitor = new FileReader();
+
+            leitor.onload = function (e) {
+                previewImagem.src = e.target.result;
+                previewContainer.classList.add("ativo");
+            };
+
+            leitor.readAsDataURL(arquivo);
+        });
+
+
+        // ==========================================
+        // REMOVER IMAGEM
+        // ==========================================
+
+        function removerImagem() {
+            arquivoSelecionado = null;
+            inputImagem.value = "";
+            previewImagem.src = "";
+            previewContainer.classList.remove("ativo");
+        }
+
+
+        // ==========================================
+        // UPLOAD DA IMAGEM NO SUPABASE
+        // ==========================================
+
+        async function fazerUploadImagem(arquivo) {
+
+            if (!arquivo) {
+                return null;
+            }
+
+            const nomeArquivo =
+                `${Date.now()}-${Math.random().toString(36).substring(2)}-${arquivo.name}`;
+
+            const caminhoArquivo = `postagens/${nomeArquivo}`;
+
+            const { error: erroUpload } =
+                await supabaseClient.storage
+                    .from(NOME_BUCKET)
+                    .upload(caminhoArquivo, arquivo, {
+                        cacheControl: "3600",
+                        upsert: false
+                    });
+
+            if (erroUpload) {
+                throw erroUpload;
+            }
+
+            const { data } =
+                supabaseClient.storage
+                    .from(NOME_BUCKET)
+                    .getPublicUrl(caminhoArquivo);
+
+            return data.publicUrl;
+        }
+
+
+        // ==========================================
+        // CRIAR POSTAGEM
+        // ==========================================
+
+        async function criarPostagem(event) {
+
+            event.preventDefault();
+
+            const nome = document.getElementById("nome").value.trim();
+            const texto = document.getElementById("texto").value.trim();
+
+            if (!nome || !texto) {
+                alert("Preencha seu nome e o texto da postagem.");
+                return;
+            }
+
+            const botaoPublicar =
+                document.querySelector("#form-postagem button[type='submit']");
+
+            botaoPublicar.disabled = true;
+            botaoPublicar.textContent = "Publicando...";
+
+            try {
+
+                let imagemUrl = null;
+
+                if (arquivoSelecionado) {
+                    imagemUrl = await fazerUploadImagem(arquivoSelecionado);
+                }
+
+                const { error } = await supabaseClient
+                    .from("postagens")
+                    .insert([
+                        {
+                            nome: nome,
+                            texto: texto,
+                            imagem_url: imagemUrl,
+                            curtidas: 0,
+                            comentarios: []
+                        }
+                    ]);
+
+                if (error) {
+                    throw error;
+                }
+
+                alert("Postagem publicada com sucesso!");
+
+                document.getElementById("form-postagem").reset();
+
+                removerImagem();
+
+                formulario.classList.remove("ativo");
+
+                carregarPostagens();
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Erro ao publicar postagem. Verifique as configurações do Supabase."
+                );
+
+            } finally {
+
+                botaoPublicar.disabled = false;
+                botaoPublicar.textContent = "Publicar postagem";
+
+            }
+        }
+
+
+        document
+            .getElementById("form-postagem")
+            .addEventListener("submit", criarPostagem);
+
+
+        // ==========================================
+        // CARREGAR POSTAGENS
+        // ==========================================
+
+        async function carregarPostagens() {
+
+            feed.innerHTML = `
+                <div class="carregando">
+                    Carregando postagens...
+                </div>
+            `;
+
+            let consulta = supabaseClient
+                .from("postagens")
+                .select("*")
+                .order("created_at", {
+                    ascending: false
+                });
+
+            if (filtroAtual) {
+
+                consulta = consulta.or(
+                    `texto.ilike.%${filtroAtual}%,nome.ilike.%${filtroAtual}%`
+                );
+
+            }
+
+            const { data, error } = await consulta;
+
+            if (error) {
+
+                console.error(error);
+
+                feed.innerHTML = `
+                    <div class="erro">
+                        Erro ao carregar postagens.
+                        Verifique a tabela "postagens" no Supabase.
+                    </div>
+                `;
+
+                return;
+            }
+
+            if (!data || data.length === 0) {
+
+                feed.innerHTML = `
+                    <div class="sem-postagens">
+                        Nenhuma postagem encontrada.
+                    </div>
+                `;
+
+                return;
+            }
+
+            feed.innerHTML = "";
+
+            data.forEach(post => {
+
+                const postagem = document.createElement("article");
+
+                postagem.className = "postagem";
+
+                const dataPostagem = post.created_at
+                    ? new Date(post.created_at).toLocaleString("pt-BR")
+                    : "";
+
+                let imagemHTML = "";
+
+                if (post.imagem_url) {
+
+                    imagemHTML = `
+                        <img
+                            class="imagem-post"
+                            src="${post.imagem_url}"
+                            alt="Imagem da postagem"
+                        >
+                    `;
+
+                }
+
+                let comentarios = [];
+
+                if (Array.isArray(post.comentarios)) {
+                    comentarios = post.comentarios;
+                }
+
+                let comentariosHTML = "";
+
+                if (comentarios.length === 0) {
+
+                    comentariosHTML = `
+                        <p>Nenhum comentário ainda.</p>
+                    `;
+
+                } else {
+
+                    comentariosHTML = comentarios
+                        .map(comentario => `
+                            <div class="comentario">
+                                ${comentario}
+                            </div>
+                        `)
+                        .join("");
+
+                }
+
+                postagem.innerHTML = `
+                    <h3>${post.nome}</h3>
+
+                    <div class="data-postagem">
+                        ${dataPostagem}
+                    </div>
+
+                    <p>${post.texto}</p>
+
+                    ${imagemHTML}
+
+                    <div class="acoes-postagem">
+
+                        <button onclick="curtirPost(${post.id}, ${post.curtidas || 0})">
+                            ❤️ Curtir (${post.curtidas || 0})
+                        </button>
+
+                    </div>
+
+                    <div class="comentarios">
+
+                        <h4>💬 Comentários</h4>
+
+                        <div>
+                            ${comentariosHTML}
+                        </div>
+
+                        <div class="campo-comentario">
+
+                            <input
+                                type="text"
+                                id="comentario-${post.id}"
+                                placeholder="Escreva um comentário..."
+                            >
+
+                            <button onclick="adicionarComentario(${post.id})">
+                                Enviar
+                            </button>
+
+                        </div>
+
+                    </div>
+                `;
+
+                feed.appendChild(postagem);
+
+            });
+
+        }
+
+
+        // ==========================================
+        // CURTIR POSTAGEM
+        // ==========================================
+
+        async function curtirPost(id, curtidasAtuais) {
+
+            const novasCurtidas = (curtidasAtuais || 0) + 1;
+
+            const { error } = await supabaseClient
+                .from("postagens")
+                .update({
+                    curtidas: novasCurtidas
+                })
+                .eq("id", id);
+
+            if (error) {
+
+                console.error(error);
+                alert("Erro ao curtir postagem.");
+                return;
+
+            }
+
+            carregarPostagens();
+
+        }
+
+
+        // ==========================================
+        // ADICIONAR COMENTÁRIO
+        // ==========================================
+
+        async function adicionarComentario(id) {
+
+            const campo =
+                document.getElementById(`comentario-${id}`);
+
+            const textoComentario = campo.value.trim();
+
+            if (!textoComentario) {
+                alert("Digite um comentário.");
+                return;
+            }
+
+            const { data: postagem, error: erroBusca } =
+                await supabaseClient
+                    .from("postagens")
+                    .select("comentarios")
+                    .eq("id", id)
+                    .single();
+
+            if (erroBusca) {
+
+                console.error(erroBusca);
+                alert("Erro ao buscar comentários.");
+                return;
+
+            }
+
+            let comentariosAtuais = [];
+
+            if (Array.isArray(postagem.comentarios)) {
+                comentariosAtuais = postagem.comentarios;
+            }
+
+            comentariosAtuais.push(textoComentario);
+
+            const { error: erroUpdate } =
+                await supabaseClient
+                    .from("postagens")
+                    .update({
+                        comentarios: comentariosAtuais
+                    })
+                    .eq("id", id);
+
+            if (erroUpdate) {
+
+                console.error(erroUpdate);
+                alert("Erro ao adicionar comentário.");
+                return;
+
+            }
+
+            carregarPostagens();
+
+        }
+
+
+        // ==========================================
+        // PESQUISAR POSTAGENS
+        // ==========================================
+
+        function executarPesquisa() {
+
+            const campo =
+                document.getElementById("campo-pesquisa");
+
+            filtroAtual = campo.value.trim();
+
+            if (filtroAtual) {
+
+                filtroContainer.classList.add("ativo");
+
+                textoFiltro.textContent =
+                    `Filtro atual: ${filtroAtual}`;
+
+            } else {
+
+                filtroContainer.classList.remove("ativo");
+
+            }
+
+            carregarPostagens();
+
+        }
+
+
+        // ==========================================
+        // LIMPAR PESQUISA
+        // ==========================================
+
+        function limparFiltro() {
+
+            filtroAtual = "";
+
+            document.getElementById("campo-pesquisa").value = "";
+
+            filtroContainer.classList.remove("ativo");
+
+            carregarPostagens();
+
+        }
+
+
+        // ==========================================
+        // INICIAR SITE
+        // ==========================================
+
+        carregarPostagens();
+
+    </script>
+
+</body>
+
+</html>
